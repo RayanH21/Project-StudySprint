@@ -11,4 +11,11 @@
     <string name="course_name_hint">Course name</string>
     <string name="delete">Delete</string>
     <string name="no_courses">No courses yet. Add one to start studying.</string>
+    <string name="exams_title">Exams</string>
+    <string name="add_exam">Add exam</string>
+    <string name="exam_title_hint">Exam title</string>
+    <string name="exam_date">Exam date</string>
+    <string name="linked_course">Linked course</string>
+    <string name="select_course">Select a course</string>
+    <string name="pick">Pick</string>
 </resources>
