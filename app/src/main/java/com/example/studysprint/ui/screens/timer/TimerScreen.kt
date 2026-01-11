@@ -1,7 +1,9 @@
 package com.example.studysprint.ui.screens.timer
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -11,15 +13,20 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -28,15 +35,16 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.studysprint.R
@@ -44,7 +52,6 @@ import com.example.studysprint.data.local.entity.CourseEntity
 import com.example.studysprint.data.local.entity.ExamEntity
 import com.example.studysprint.repository.StudyRepository
 import com.example.studysprint.util.formatMmSs
-import androidx.compose.material3.DropdownMenu
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -130,6 +137,7 @@ fun TimerScreen(repository: StudyRepository, padding: PaddingValues) {
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
 
+            // Selections
             SectionCard {
                 CourseDropdown(
                     courses = state.courses,
@@ -155,6 +163,7 @@ fun TimerScreen(repository: StudyRepository, padding: PaddingValues) {
                 }
             }
 
+            // Timer
             SectionCard {
                 Text(
                     text = if (state.phase == TimerPhase.FOCUS)
@@ -164,7 +173,15 @@ fun TimerScreen(repository: StudyRepository, padding: PaddingValues) {
                     style = MaterialTheme.typography.titleLarge
                 )
 
-                val total = if (state.phase == TimerPhase.FOCUS) state.preset.focusSeconds else state.preset.breakSeconds
+                // ✅ Round indicator
+                Text(
+                    text = stringResource(R.string.round_of, state.currentRound, state.roundsTarget),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                val total =
+                    if (state.phase == TimerPhase.FOCUS) state.preset.focusSeconds else state.preset.breakSeconds
                 val progress = (state.remainingSeconds.toFloat() / total.toFloat()).coerceIn(0f, 1f)
 
                 LinearProgressIndicator(
@@ -200,6 +217,7 @@ fun TimerScreen(repository: StudyRepository, padding: PaddingValues) {
                 }
             }
 
+            // Preset + Rounds
             SectionCard {
                 val scroll = rememberScrollState()
                 Row(
@@ -224,6 +242,41 @@ fun TimerScreen(repository: StudyRepository, padding: PaddingValues) {
                         label = { Text(stringResource(R.string.preset_demo)) }
                     )
                 }
+
+                Spacer(Modifier.height(10.dp))
+
+                // ✅ Rounds selector
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = stringResource(R.string.rounds),
+                        style = MaterialTheme.typography.titleSmall
+                    )
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(
+                            enabled = !state.isRunning && state.roundsTarget > 1,
+                            onClick = { vm.setRoundsTarget(state.roundsTarget - 1) }
+                        ) {
+                            Icon(Icons.Default.Remove, contentDescription = null)
+                        }
+
+                        Text(
+                            text = state.roundsTarget.toString(),
+                            style = MaterialTheme.typography.titleMedium
+                        )
+
+                        IconButton(
+                            enabled = !state.isRunning && state.roundsTarget < 8,
+                            onClick = { vm.setRoundsTarget(state.roundsTarget + 1) }
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = null)
+                        }
+                    }
+                }
             }
         }
     }
@@ -243,7 +296,6 @@ private fun SectionCard(content: @Composable () -> Unit) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CourseDropdown(
     courses: List<CourseEntity>,
@@ -253,18 +305,22 @@ private fun CourseDropdown(
     var expanded by remember { mutableStateOf(false) }
     val selectedName = courses.firstOrNull { it.id == selectedCourseId }?.name ?: ""
 
-    Column {
+    Box(modifier = Modifier.fillMaxWidth()) {
         OutlinedTextField(
             modifier = Modifier.fillMaxWidth(),
             readOnly = true,
             value = selectedName,
             onValueChange = {},
             label = { Text(stringResource(R.string.select_course)) },
-            trailingIcon = { Text("▼") }
+            trailingIcon = { Icon(Icons.Filled.ArrowDropDown, contentDescription = null) }
         )
 
-        // Ouvre le menu quand on clique sur le champ
-        // (truc simple et fiable)
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .clickable(role = Role.Button) { expanded = !expanded }
+        )
+
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
@@ -280,18 +336,9 @@ private fun CourseDropdown(
                 )
             }
         }
-
-        // Trick simple: clique sur toute la zone du field
-        // (sinon le menu ne s’ouvre pas)
-        // -> on met un bouton transparent au-dessus
-        TextButton(
-            onClick = { expanded = true },
-            modifier = Modifier.fillMaxWidth()
-        ) { /* invisible click target */ }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ExamDropdown(
     exams: List<ExamEntity>,
@@ -301,14 +348,20 @@ private fun ExamDropdown(
     var expanded by remember { mutableStateOf(false) }
     val selectedTitle = exams.firstOrNull { it.id == selectedExamId }?.title ?: ""
 
-    Column {
+    Box(modifier = Modifier.fillMaxWidth()) {
         OutlinedTextField(
             modifier = Modifier.fillMaxWidth(),
             readOnly = true,
             value = selectedTitle,
             onValueChange = {},
             label = { Text(stringResource(R.string.select_exam_optional)) },
-            trailingIcon = { Text("▼") }
+            trailingIcon = { Icon(Icons.Filled.ArrowDropDown, contentDescription = null) }
+        )
+
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .clickable(role = Role.Button) { expanded = !expanded }
         )
 
         DropdownMenu(
@@ -333,10 +386,5 @@ private fun ExamDropdown(
                 )
             }
         }
-
-        TextButton(
-            onClick = { expanded = true },
-            modifier = Modifier.fillMaxWidth()
-        ) { /* invisible click target */ }
     }
 }

@@ -20,6 +20,8 @@ enum class Preset(val focusSeconds: Int, val breakSeconds: Int) {
 }
 
 data class TimerUiState(
+    val roundsTarget: Int = 1,
+    val currentRound: Int = 1,
     val courses: List<CourseEntity> = emptyList(),
     val exams: List<ExamEntity> = emptyList(),
     val selectedCourseId: Long? = null,
@@ -34,6 +36,23 @@ data class TimerUiState(
 )
 
 class TimerViewModel(private val repo: StudyRepository) : ViewModel() {
+
+    fun setRoundsTarget(target: Int) {
+        val clamped = target.coerceIn(1, 8)
+        ticker?.cancel()
+        sessionStartedAt = null
+        internal.update { cur ->
+            val preset = cur.preset
+            cur.copy(
+                roundsTarget = clamped,
+                currentRound = 1,
+                phase = TimerPhase.FOCUS,
+                remainingSeconds = preset.focusSeconds,
+                isRunning = false,
+                showCompletionDialog = false
+            )
+        }
+    }
 
     private val internal = MutableStateFlow(TimerUiState())
 
@@ -64,15 +83,17 @@ class TimerViewModel(private val repo: StudyRepository) : ViewModel() {
     fun setPreset(preset: Preset) {
         ticker?.cancel()
         sessionStartedAt = null
-        internal.update {
-            it.copy(
+        internal.update { cur ->
+            cur.copy(
                 preset = preset,
                 phase = TimerPhase.FOCUS,
                 remainingSeconds = preset.focusSeconds,
                 isRunning = false,
-                showCompletionDialog = false
+                showCompletionDialog = false,
+                currentRound = 1
             )
         }
+        sessionStartedAt = null
     }
 
     fun startPause() {
@@ -88,6 +109,7 @@ class TimerViewModel(private val repo: StudyRepository) : ViewModel() {
         // starting a focus session from the beginning
         if (s.phase == TimerPhase.FOCUS && s.remainingSeconds == s.preset.focusSeconds) {
             sessionStartedAt = System.currentTimeMillis()
+            internal.update { it.copy(currentRound = 1) }
         }
 
         internal.update { it.copy(isRunning = true) }
@@ -110,11 +132,21 @@ class TimerViewModel(private val repo: StudyRepository) : ViewModel() {
                 phase = TimerPhase.BREAK,
                 remainingSeconds = cur.preset.breakSeconds
             )
-            TimerPhase.BREAK -> cur.copy(
-                isRunning = false,
-                remainingSeconds = 0,
-                showCompletionDialog = true
-            )
+            TimerPhase.BREAK -> {
+                if (cur.currentRound < cur.roundsTarget) {
+                    cur.copy(
+                        phase = TimerPhase.FOCUS,
+                        remainingSeconds = cur.preset.focusSeconds,
+                        currentRound = cur.currentRound + 1
+                    )
+                } else {
+                    cur.copy(
+                        isRunning = false,
+                        remainingSeconds = 0,
+                        showCompletionDialog = true
+                    )
+                }
+            }
         }
     }
 
@@ -131,8 +163,8 @@ class TimerViewModel(private val repo: StudyRepository) : ViewModel() {
                 courseId = courseId,
                 examId = s.selectedExamId,
                 startedAt = sessionStartedAt ?: System.currentTimeMillis(),
-                focusSeconds = s.preset.focusSeconds.toLong(),
-                breakSeconds = s.preset.breakSeconds.toLong(),
+                focusSeconds = (s.preset.focusSeconds * s.roundsTarget).toLong(),
+                breakSeconds = (s.preset.breakSeconds * s.roundsTarget).toLong(),
                 note = note,
                 readiness = readiness
             )
@@ -148,7 +180,8 @@ class TimerViewModel(private val repo: StudyRepository) : ViewModel() {
                 phase = TimerPhase.FOCUS,
                 remainingSeconds = preset.focusSeconds,
                 isRunning = false,
-                showCompletionDialog = false
+                showCompletionDialog = false,
+                currentRound = 1
             )
         }
         sessionStartedAt = null
