@@ -69,7 +69,7 @@ Unlike a basic Pomodoro timer, StudySprint links every study session to a **Cour
 ## APK
 A built APK is included in the repository:
 
-- `apk/app-debug.apk`
+- `app/apk/app-debug.apk`
 
 (Your file name may differ slightly, but it will be inside the `apk/` folder.)
 
