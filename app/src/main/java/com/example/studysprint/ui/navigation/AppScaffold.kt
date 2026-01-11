@@ -19,9 +19,11 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.studysprint.R
 import com.example.studysprint.ui.screens.PlaceholderScreen
+import com.example.studysprint.repository.StudyRepository
 
 @Composable
-fun AppScaffold() {
+fun AppScaffold(repository: StudyRepository) {
+
     val navController = rememberNavController()
     val backStack by navController.currentBackStackEntryAsState()
     val currentRoute = backStack?.destination?.route
