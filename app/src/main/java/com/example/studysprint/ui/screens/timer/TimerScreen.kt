@@ -29,7 +29,11 @@ fun TimerScreen(repository: StudyRepository, padding: PaddingValues) {
 
     if (state.showCompletionDialog) {
         AlertDialog(
-            onDismissRequest = { vm.dismissDialog() },
+            onDismissRequest = {
+                vm.dismissDialog()
+                note = ""
+                readiness = null
+            },
             title = { Text(stringResource(R.string.session_completed)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -65,7 +69,15 @@ fun TimerScreen(repository: StudyRepository, padding: PaddingValues) {
                     note = ""
                     readiness = null
                 }) { Text(stringResource(R.string.save_session)) }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    vm.dismissDialog()
+                    note = ""
+                    readiness = null
+                }) { Text("Cancel") }
             }
+            
         )
     }
 
