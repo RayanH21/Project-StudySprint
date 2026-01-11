@@ -36,4 +36,14 @@
     <string name="ready_yes">Yes</string>
     <string name="ready_no">No</string>
     <string name="save_session">Save session</string>
+    <string name="stats_title">Stats</string>
+    <string name="focus_by_course">Focus time by course</string>
+    <string name="focus_by_exam">Focus time by exam</string>
+    <string name="readiness_by_exam">Readiness by exam</string>
+    <string name="ready_count">Ready</string>
+    <string name="not_ready_count">Not ready</string>
+    <string name="exam_status_title">Exam readiness status</string>
+    <string name="status_ready">Ready</string>
+    <string name="status_not_ready">Not ready</string>
+    <string name="status_no_feedback">No feedback yet</string>
 </resources>

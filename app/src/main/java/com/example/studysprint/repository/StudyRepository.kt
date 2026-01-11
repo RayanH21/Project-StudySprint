@@ -4,7 +4,6 @@ import com.example.studysprint.data.local.entity.CourseEntity
 import com.example.studysprint.data.local.entity.ExamEntity
 import com.example.studysprint.data.local.projections.CourseFocusTotal
 import com.example.studysprint.data.local.projections.ExamFocusTotal
-import com.example.studysprint.data.local.projections.ExamReadinessCounts
 import com.example.studysprint.data.local.projections.ExamWithCourseName
 import kotlinx.coroutines.flow.Flow
 
@@ -31,5 +30,5 @@ interface StudyRepository {
 
     fun observeCourseFocusTotals(): Flow<List<CourseFocusTotal>>
     fun observeExamFocusTotals(): Flow<List<ExamFocusTotal>>
-    fun observeExamReadinessCounts(): Flow<List<ExamReadinessCounts>>
+    fun observeExamReadinessStatus(): Flow<List<com.example.studysprint.data.local.projections.ExamReadinessStatus>>
 }

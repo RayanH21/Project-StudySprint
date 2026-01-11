@@ -5,7 +5,6 @@ import androidx.room.Insert
 import androidx.room.Query
 import com.example.studysprint.data.local.projections.CourseFocusTotal
 import com.example.studysprint.data.local.projections.ExamFocusTotal
-import com.example.studysprint.data.local.projections.ExamReadinessCounts
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -30,12 +29,15 @@ interface StudySessionDao {
     fun observeExamFocusTotals(): Flow<List<ExamFocusTotal>>
 
     @Query("""
-        SELECT examId AS examId,
-               SUM(CASE WHEN readiness = 1 THEN 1 ELSE 0 END) AS readyCount,
-               SUM(CASE WHEN readiness = 0 THEN 1 ELSE 0 END) AS notReadyCount
+    SELECT s.examId AS examId, s.readiness AS readiness
+    FROM study_sessions s
+    WHERE s.examId IS NOT NULL
+      AND s.readiness IS NOT NULL
+      AND s.id = (
+        SELECT MAX(id)
         FROM study_sessions
-        WHERE examId IS NOT NULL AND readiness IS NOT NULL
-        GROUP BY examId
-    """)
-    fun observeExamReadinessCounts(): Flow<List<ExamReadinessCounts>>
+        WHERE examId = s.examId AND readiness IS NOT NULL
+      )
+""")
+    fun observeExamReadinessStatus(): Flow<List<com.example.studysprint.data.local.projections.ExamReadinessStatus>>
 }

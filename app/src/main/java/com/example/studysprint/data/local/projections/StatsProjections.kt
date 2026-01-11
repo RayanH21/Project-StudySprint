@@ -12,10 +12,9 @@ data class ExamFocusTotal(
     @ColumnInfo(name = "totalFocusSeconds") val totalFocusSeconds: Long
 )
 
-data class ExamReadinessCounts(
-    @ColumnInfo(name = "examId") val examId: Long,
-    @ColumnInfo(name = "readyCount") val readyCount: Long,
-    @ColumnInfo(name = "notReadyCount") val notReadyCount: Long
+data class ExamReadinessStatus(
+    @androidx.room.ColumnInfo(name = "examId") val examId: Long,
+    @androidx.room.ColumnInfo(name = "readiness") val readiness: Int
 )
 
 data class ExamWithCourseName(

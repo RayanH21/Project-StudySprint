@@ -6,7 +6,6 @@ import com.example.studysprint.data.local.entity.ExamEntity
 import com.example.studysprint.data.local.entity.StudySessionEntity
 import com.example.studysprint.data.local.projections.CourseFocusTotal
 import com.example.studysprint.data.local.projections.ExamFocusTotal
-import com.example.studysprint.data.local.projections.ExamReadinessCounts
 import com.example.studysprint.data.local.projections.ExamWithCourseName
 import kotlinx.coroutines.flow.Flow
 
@@ -74,6 +73,6 @@ class StudyRepositoryImpl(
     override fun observeExamFocusTotals(): Flow<List<ExamFocusTotal>> =
         db.sessionDao().observeExamFocusTotals()
 
-    override fun observeExamReadinessCounts(): Flow<List<ExamReadinessCounts>> =
-        db.sessionDao().observeExamReadinessCounts()
+    override fun observeExamReadinessStatus() =
+        db.sessionDao().observeExamReadinessStatus()
 }

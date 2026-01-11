@@ -77,7 +77,7 @@ fun TimerScreen(repository: StudyRepository, padding: PaddingValues) {
                     readiness = null
                 }) { Text("Cancel") }
             }
-            
+
         )
     }
 
