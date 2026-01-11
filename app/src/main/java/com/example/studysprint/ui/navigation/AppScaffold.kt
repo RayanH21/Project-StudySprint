@@ -59,7 +59,7 @@ fun AppScaffold(repository: StudyRepository) {
             navController = navController,
             startDestination = TopDest.Courses.route
         ) {
-            composable(TopDest.Courses.route) { PlaceholderScreen(titleRes = R.string.nav_courses, padding = padding) }
+            composable(TopDest.Courses.route) { com.example.studysprint.ui.screens.courses.CoursesScreen(repository, padding) }
             composable(TopDest.Exams.route) { PlaceholderScreen(titleRes = R.string.nav_exams, padding = padding) }
             composable(TopDest.Timer.route) { PlaceholderScreen(titleRes = R.string.nav_timer, padding = padding) }
             composable(TopDest.Stats.route) { PlaceholderScreen(titleRes = R.string.nav_stats, padding = padding) }
