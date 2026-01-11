@@ -28,7 +28,9 @@ data class TimerUiState(
     val preset: Preset = Preset.STANDARD,
     val phase: TimerPhase = TimerPhase.FOCUS,
     val remainingSeconds: Int = Preset.STANDARD.focusSeconds,
-    val isRunning: Boolean = false
+    val isRunning: Boolean = false,
+
+    val showCompletionDialog: Boolean = false
 )
 
 class TimerViewModel(private val repo: StudyRepository) : ViewModel() {
@@ -49,6 +51,7 @@ class TimerViewModel(private val repo: StudyRepository) : ViewModel() {
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), TimerUiState())
 
     private var ticker: Job? = null
+    private var sessionStartedAt: Long? = null
 
     fun setCourse(courseId: Long) {
         internal.update { it.copy(selectedCourseId = courseId, selectedExamId = null) }
@@ -60,12 +63,14 @@ class TimerViewModel(private val repo: StudyRepository) : ViewModel() {
 
     fun setPreset(preset: Preset) {
         ticker?.cancel()
+        sessionStartedAt = null
         internal.update {
             it.copy(
                 preset = preset,
                 phase = TimerPhase.FOCUS,
                 remainingSeconds = preset.focusSeconds,
-                isRunning = false
+                isRunning = false,
+                showCompletionDialog = false
             )
         }
     }
@@ -78,6 +83,11 @@ class TimerViewModel(private val repo: StudyRepository) : ViewModel() {
             ticker?.cancel()
             internal.update { it.copy(isRunning = false) }
             return
+        }
+
+        // starting a focus session from the beginning
+        if (s.phase == TimerPhase.FOCUS && s.remainingSeconds == s.preset.focusSeconds) {
+            sessionStartedAt = System.currentTimeMillis()
         }
 
         internal.update { it.copy(isRunning = true) }
@@ -102,8 +112,31 @@ class TimerViewModel(private val repo: StudyRepository) : ViewModel() {
             )
             TimerPhase.BREAK -> cur.copy(
                 isRunning = false,
-                remainingSeconds = 0
+                remainingSeconds = 0,
+                showCompletionDialog = true
             )
+        }
+    }
+
+    fun dismissDialog() {
+        internal.update { it.copy(showCompletionDialog = false) }
+    }
+
+    fun saveSession(note: String?, readiness: Int?) {
+        val s = internal.value
+        val courseId = s.selectedCourseId ?: return
+
+        viewModelScope.launch {
+            repo.saveSession(
+                courseId = courseId,
+                examId = s.selectedExamId,
+                startedAt = sessionStartedAt ?: System.currentTimeMillis(),
+                focusSeconds = s.preset.focusSeconds.toLong(),
+                breakSeconds = s.preset.breakSeconds.toLong(),
+                note = note,
+                readiness = readiness
+            )
+            reset()
         }
     }
 
@@ -114,8 +147,10 @@ class TimerViewModel(private val repo: StudyRepository) : ViewModel() {
             it.copy(
                 phase = TimerPhase.FOCUS,
                 remainingSeconds = preset.focusSeconds,
-                isRunning = false
+                isRunning = false,
+                showCompletionDialog = false
             )
         }
+        sessionStartedAt = null
     }
 }

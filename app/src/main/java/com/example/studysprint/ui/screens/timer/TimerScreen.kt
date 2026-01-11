@@ -22,8 +22,52 @@ import androidx.compose.foundation.layout.Column
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TimerScreen(repository: StudyRepository, padding: PaddingValues) {
+    var note by remember { mutableStateOf("") }
+    var readiness by remember { mutableStateOf<Int?>(null) }
     val vm: TimerViewModel = viewModel(factory = TimerViewModelFactory(repository))
     val state by vm.uiState.collectAsState()
+
+    if (state.showCompletionDialog) {
+        AlertDialog(
+            onDismissRequest = { vm.dismissDialog() },
+            title = { Text(stringResource(R.string.session_completed)) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    OutlinedTextField(
+                        value = note,
+                        onValueChange = { note = it },
+                        label = { Text(stringResource(R.string.note_optional)) }
+                    )
+
+                    if (state.selectedExamId != null) {
+                        Text(stringResource(R.string.ready_question))
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            FilterChip(
+                                selected = readiness == 1,
+                                onClick = { readiness = 1 },
+                                label = { Text(stringResource(R.string.ready_yes)) }
+                            )
+                            FilterChip(
+                                selected = readiness == 0,
+                                onClick = { readiness = 0 },
+                                label = { Text(stringResource(R.string.ready_no)) }
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    vm.saveSession(
+                        note = note,
+                        readiness = if (state.selectedExamId != null) readiness else null
+                    )
+                    note = ""
+                    readiness = null
+                }) { Text(stringResource(R.string.save_session)) }
+            }
+        )
+    }
 
     Scaffold(
         topBar = { TopAppBar(title = { Text(stringResource(R.string.timer_title)) }) }

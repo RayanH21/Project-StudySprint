@@ -30,4 +30,10 @@
     <string name="select_exam_optional">Select an exam (optional)</string>
     <string name="none">None</string>
     <string name="course_required">Course is required to start.</string>
+    <string name="session_completed">Session completed</string>
+    <string name="note_optional">Note (optional)</string>
+    <string name="ready_question">Ready for this exam?</string>
+    <string name="ready_yes">Yes</string>
+    <string name="ready_no">No</string>
+    <string name="save_session">Save session</string>
 </resources>
