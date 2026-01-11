@@ -22,6 +22,10 @@ import com.example.studysprint.data.local.entity.CourseEntity
 import com.example.studysprint.repository.StudyRepository
 import com.example.studysprint.util.epochDayToLocalDate
 import java.time.LocalDate
+import com.example.studysprint.ui.components.AppCard
+import com.example.studysprint.ui.components.EmptyState
+import androidx.compose.foundation.layout.Column
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,7 +56,7 @@ fun ExamsScreen(
                         selectedDate = epochDayToLocalDate(epochDay)
                     }
                     showDatePicker = false
-                }) { Text("OK") }
+                }) { Text(stringResource(R.string.ok)) }
             }
         ) { DatePicker(state = state) }
     }
@@ -66,56 +70,80 @@ fun ExamsScreen(
                 .padding(padding)
                 .padding(inner)
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            item {
-                OutlinedTextField(
-                    modifier = Modifier.fillMaxWidth(),
-                    value = title,
-                    onValueChange = { title = it },
-                    label = { Text(stringResource(R.string.exam_title_hint)) },
-                    singleLine = true
-                )
-            }
 
+            // FORM CARD
             item {
-                CourseDropdown(
-                    courses = courses,
-                    selectedCourseId = selectedCourseId,
-                    onSelect = { selectedCourseId = it }
-                )
-            }
+                AppCard {
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        OutlinedTextField(
+                            modifier = Modifier.fillMaxWidth(),
+                            value = title,
+                            onValueChange = { title = it },
+                            label = { Text(stringResource(R.string.exam_title_hint)) },
+                            singleLine = true
+                        )
 
-            item {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(text = "${stringResource(R.string.exam_date)}: $selectedDate")
-                    TextButton(onClick = { showDatePicker = true }) {
-                        Text(stringResource(R.string.pick))
+                        CourseDropdown(
+                            courses = courses,
+                            selectedCourseId = selectedCourseId,
+                            onSelect = { selectedCourseId = it }
+                        )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(text = "${stringResource(R.string.exam_date)}: $selectedDate")
+                            TextButton(onClick = { showDatePicker = true }) {
+                                Text(stringResource(R.string.pick))
+                            }
+                        }
+
+                        Button(
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = selectedCourseId != null,
+                            onClick = {
+                                vm.addExam(title, selectedDate.toEpochDay(), selectedCourseId!!)
+                                title = ""
+                            }
+                        ) {
+                            Text(stringResource(R.string.add_exam))
+                        }
                     }
                 }
             }
 
-            item {
-                Button(
-                    enabled = selectedCourseId != null,
-                    onClick = {
-                        vm.addExam(title, selectedDate.toEpochDay(), selectedCourseId!!)
-                        title = ""
-                    }
-                ) { Text(stringResource(R.string.add_exam)) }
-            }
+            // LIST / EMPTY
+            if (exams.isEmpty()) {
+                item { EmptyState(stringResource(R.string.no_exams)) }
+            } else {
+                items(exams, key = { it.id }) { exam ->
+                    AppCard {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = exam.title,
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                                Text(
+                                    text = "${epochDayToLocalDate(exam.dateEpochDay)} • ${exam.courseName}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
 
-            items(exams, key = { it.id }) { exam ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Text(
-                        modifier = Modifier.weight(1f),
-                        text = "${exam.title} • ${epochDayToLocalDate(exam.dateEpochDay)} • ${exam.courseName}"
-                    )
-                    IconButton(onClick = { vm.deleteExam(exam.id) }) {
-                        Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete))
+                            IconButton(onClick = { vm.deleteExam(exam.id) }) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = stringResource(R.string.delete)
+                                )
+                            }
+                        }
                     }
                 }
             }

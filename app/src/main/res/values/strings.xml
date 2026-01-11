@@ -46,4 +46,7 @@
     <string name="status_ready">Ready</string>
     <string name="status_not_ready">Not ready</string>
     <string name="status_no_feedback">No feedback yet</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="no_exams">No exams</string>
 </resources>
