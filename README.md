@@ -78,5 +78,3 @@ A built APK is included in the repository:
 ## Tools & Credits
 - Developed with Android Studio.
 - AI assistance: GitHub Copilot was used during development for code suggestions and productivity.
- 
----
